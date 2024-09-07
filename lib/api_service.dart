@@ -1,42 +1,27 @@
+import 'package:retrofit/retrofit.dart';
 import 'package:dio/dio.dart';
-import 'weather_model.dart';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:weather/weather_model.dart';
 
-class WeatherApi {
-  final Dio _dio;
+part'api_service.g.dart';
 
-  WeatherApi([Dio? dio])
-      : _dio = dio ??
-      Dio(BaseOptions(
-        baseUrl: 'https://freetestapi.com/api/v1/products',
+const String baseUrl = 'https://my.meteoblue.com';
+@RestApi(baseUrl: baseUrl)
+abstract class ApiService {
+  factory ApiService(Dio dio,{String baseUrl=baseUrl}) {
+    dio.options = BaseOptions(
+      contentType: 'application/json',
+    );
 
-      ));
-
-  Future<WeatherModel> getWeather(
-      double latitude,
-      double longitude,
-      ) async {
-    final queryParameters = {
-      'latitude': latitude,
-      'longitude': longitude,
-
-    };
-
-    try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/products',
-        queryParameters: queryParameters,
-      );
-
-      print('Raw response data: ${response.data}');
-
-      if (response.data != null) {
-        return WeatherModel.fromJson(response.data!);
-      } else {
-        throw Exception('Response data is null or not in expected format.');
-      }
-    } on DioError catch (e) {
-      print('DioError: ${e.message}');
-      throw e;
-    }
+    return _ApiService(dio);
   }
+
+  @GET('/packages/basic-1h_basic-day')
+  Future<Map<String, dynamic>> fetchWeatherData(
+      @Query('apikey') String apiKey,
+      @Query('lat') double latitude,
+      @Query('lon') double longitude,
+      @Query('asl') int altitude,
+      @Query('format') String format
+      );
 }
